@@ -3,41 +3,43 @@
 #include <iomanip>
 using namespace std;
 
+//Parameters
 const int maxClusters = 4;
 const int vectorLength = 4;
 const double decayRate = 0.96;              //About 100 iterations.
 const double minAlpha = 0.01;
-//const double radiusReductionPoint = 0.023;  //Last 20% of iterations.
+
+//Neighbor Updating Parameter
+const double radiusReductionPoint = 0.023;  //Last 20% of iterations.
+int reductionPoint = 0;
+int reductionFlag = 1;
 
 double alpha = 0.6;
 double d[maxClusters];                      //Network nodes.
+
+//Debug Flag
+int updateNeighbor = 1;
 int debug =0 ;
 
 //Weight matrix with randomly chosen values between 0.0 and 1.0
-//double w[maxClusters][vectorLength] = {{0.2, 0.6, 0.5, 0.9},
-//                                 {0.9, 0.3, 0.6, 0.4},
-//                                 {0.8, 0.5, 0.7, 0.2},
-//                                 {0.6, 0.4, 0.2, 0.3}};
-double w[maxClusters][vectorLength];
+double w[maxClusters][vectorLength] = {{0.2, 0.6, 0.5, 0.1},
+                                 {0.9, 0.3, 0.6, 0.4},
+                                 {0.3, 0.5, 0.9, 0.2},
+                                 {0.4, 0.9, 0.2, 0.3}};
 
 //Training patterns.
-const int NUM_TRAINING_PATTERN = 16;
-//int training_pattern[NUM_TRAINING_PATTERN][vectorLength] = {{1, 1, 1, 0},
+const int NUM_TRAINING_PATTERN = 13;
+//int training_pattern[NUM_TRAINING_PATTERN][vectorLength] = {
 //                                                          {0, 0, 0, 1},
-//                                                          {0, 0, 1, 1},
-//                                                          {0, 1, 1, 1},
-//                                                          {1, 1, 1, 1},
-//                                                          {1, 0, 0, 0},
-//                                                          {1, 1, 0, 0}};
+//                                                          {0, 0, 1, 0},
+//                                                          {0, 1, 0, 0},
+//                                                          {1, 0, 0, 0}
+//                                                          };
 int training_pattern[NUM_TRAINING_PATTERN][vectorLength] = {{0, 0, 0, 0},
                                                           {0, 0, 0, 1},
                                                           {0, 0, 1, 0},
                                                           {0, 0, 1, 1},
                                                           {0, 1, 0, 0},
-                                                          {0, 1, 0, 1},
-                                                          {0, 1, 1, 0},
-                                                          {0, 1, 1, 1},
-                                                          {1, 0, 0, 0},
                                                           {1, 0, 0, 1},
                                                           {1, 0, 1, 0},
                                                           {1, 0, 1, 1},
@@ -50,9 +52,9 @@ int training_pattern[NUM_TRAINING_PATTERN][vectorLength] = {{0, 0, 0, 0},
 //Testing patterns to try after training is complete.
 const int inputTests = 4;
 int tests[inputTests][vectorLength] = {{0, 0, 0, 1},
+                                 {1, 0, 0, 0},
                                  {0, 0, 1, 0},
-                                 {0, 1, 0, 0},
-                                 {1, 0, 0, 0}
+                                 {0, 1, 0, 0}
                                  };
 //////////////////////////////////////////////////////////////////////
 
@@ -76,12 +78,33 @@ void distArrayCalculation(int inputArray[NUM_TRAINING_PATTERN][vectorLength] , i
 }
 
 void updateWinnerWeight(int winnerIndex , int vectorSelector){
-
     for(int i = 0; i < vectorLength ; i++){
         //Update the winner W[winnerIdx][feature]
         //Using OLD_WEIGHT and train_pattern[Vector in that round][features]
         //With Alpha factor
         w[winnerIndex][i] = w[winnerIndex][i] + (alpha * (training_pattern[vectorSelector][i] - w[winnerIndex][i]));
+
+        //UPDATE NEIGHTBOR VALUE (DEFAULT THIS CODE IS MUTE BY updateNeighbor FLAG)
+        if(alpha > radiusReductionPoint && updateNeighbor){
+            if((winnerIndex > 0) && (winnerIndex < (maxClusters - 1))){ //NEIGHBOR IN RANGE
+                //Update neighbor to the left...
+                w[winnerIndex - 1][i] = w[winnerIndex - 1][i] +
+                    (alpha * (training_pattern[vectorSelector][i] - w[winnerIndex - 1][i]));
+                //and update neighbor to the right.
+                w[winnerIndex + 1][i] = w[winnerIndex + 1][i] +
+                    (alpha * (training_pattern[vectorSelector][i] - w[winnerIndex + 1][i]));
+            } else {
+                if(winnerIndex == 0){ //Neighbor is on LEFT EDGE
+                    //Update neighbor to the right.
+                    w[winnerIndex + 1][i] = w[winnerIndex + 1][i] +
+                        (alpha * (training_pattern[vectorSelector][i] - w[winnerIndex + 1][i]));
+                } else { //Neighbor is on RIGHT EDGE
+                    //Update neighbor to the left.
+                    w[winnerIndex - 1][i] = w[winnerIndex - 1][i] +
+                        (alpha * (training_pattern[vectorSelector][i] - w[winnerIndex - 1][i]));
+                }
+            }
+        }
     }
 }
 
@@ -115,8 +138,14 @@ void training(){
         alpha = decayRate * alpha;
         //UPDATE ITERATOR
         iteration++;
+        //UPDATE NEIGHBOR UPDATOR Parameter
+        if(alpha < radiusReductionPoint && reductionFlag && updateNeighbor){
+                reductionFlag = 0;
+                reductionPoint = iteration;
+        }
 
     }while(alpha > minAlpha);
+
     cout << "=========================" << endl;
     cout << " END OF TRANING PROCESS  " << endl;
     cout << "=========================" << endl;
@@ -193,7 +222,6 @@ int main()
     cout << "=========================" << endl;
     cout << " Testing On UNSEEN Data  " << endl;
     cout << "=========================" << endl;
-        debug = 1;
         classify_testing();
     cout << "=========================" << endl;
 

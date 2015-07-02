@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1435826432 source:c:\users\ce-user\documents\simplesom-cplusplus\main.cpp
+	<iostream>
+	<cmath>
+	<iomanip>
+
