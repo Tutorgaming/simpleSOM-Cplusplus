@@ -6,9 +6,9 @@ using namespace std;
 //Parameters
 const int maxClusters = 4;
 const int vectorLength = 4;
-const double decayRate = 0.96;              //About 100 iterations.
+const double decayRate = 0.95;//0.96;              //About 100 iterations.
 const double minAlpha = 0.01;
-
+const int UPDATETYPE = 0;
 //Neighbor Updating Parameter
 const double radiusReductionPoint = 0.023;  //Last 20% of iterations.
 int reductionPoint = 0;
@@ -18,35 +18,40 @@ double alpha = 0.6;
 double d[maxClusters];                      //Network nodes.
 
 //Debug Flag
-int updateNeighbor = 1;
+int updateNeighbor = 0;
 int debug =0 ;
 
 //Weight matrix with randomly chosen values between 0.0 and 1.0
-double w[maxClusters][vectorLength] = {{0.2, 0.6, 0.5, 0.1},
-                                 {0.9, 0.3, 0.6, 0.4},
-                                 {0.3, 0.5, 0.9, 0.2},
-                                 {0.4, 0.9, 0.2, 0.3}};
+//double w[maxClusters][vectorLength] = {{0.2, 0.3, 0.8, 0.4},
+//                                 {0.2, 0.8, 0.8, 0.6},
+//                                 {0.1, 0.4, 0.7, 0.3},
+//                                 {0.4, 0.5, 0.1, 0.7}};
+double w[maxClusters][vectorLength] = {{0.1, 0.1, 0.1, 0.1},
+                                 {0.1, 0.1, 0.1, 0.1},
+                                 {0.1, 0.1, 0.1, 0.1},
+                                 {0.1, 0.1, 0.1, 0.1}};
 
 //Training patterns.
-const int NUM_TRAINING_PATTERN = 13;
+const int NUM_TRAINING_PATTERN = 12;
 //int training_pattern[NUM_TRAINING_PATTERN][vectorLength] = {
 //                                                          {0, 0, 0, 1},
 //                                                          {0, 0, 1, 0},
 //                                                          {0, 1, 0, 0},
 //                                                          {1, 0, 0, 0}
 //                                                          };
-int training_pattern[NUM_TRAINING_PATTERN][vectorLength] = {{0, 0, 0, 0},
+int training_pattern[NUM_TRAINING_PATTERN][vectorLength] = {
                                                           {0, 0, 0, 1},
                                                           {0, 0, 1, 0},
-                                                          {0, 0, 1, 1},
                                                           {0, 1, 0, 0},
-                                                          {1, 0, 0, 1},
-                                                          {1, 0, 1, 0},
-                                                          {1, 0, 1, 1},
-                                                          {1, 1, 0, 0},
-                                                          {1, 1, 0, 1},
-                                                          {1, 1, 1, 0},
-                                                          {1, 1, 1, 1}
+                                                          {1, 0, 0, 0},
+                                                          {0, 0, 0, 1},
+                                                          {0, 0, 1, 0},
+                                                          {0, 1, 0, 0},
+                                                          {1, 0, 0, 0},
+                                                          {0, 0, 0, 1},
+                                                          {0, 0, 1, 0},
+                                                          {0, 1, 0, 0},
+                                                          {1, 0, 0, 0}
                                                           };
 
 //Testing patterns to try after training is complete.
@@ -86,24 +91,35 @@ void updateWinnerWeight(int winnerIndex , int vectorSelector){
 
         //UPDATE NEIGHTBOR VALUE (DEFAULT THIS CODE IS MUTE BY updateNeighbor FLAG)
         if(alpha > radiusReductionPoint && updateNeighbor){
-            if((winnerIndex > 0) && (winnerIndex < (maxClusters - 1))){ //NEIGHBOR IN RANGE
-                //Update neighbor to the left...
-                w[winnerIndex - 1][i] = w[winnerIndex - 1][i] +
-                    (alpha * (training_pattern[vectorSelector][i] - w[winnerIndex - 1][i]));
-                //and update neighbor to the right.
-                w[winnerIndex + 1][i] = w[winnerIndex + 1][i] +
-                    (alpha * (training_pattern[vectorSelector][i] - w[winnerIndex + 1][i]));
-            } else {
-                if(winnerIndex == 0){ //Neighbor is on LEFT EDGE
-                    //Update neighbor to the right.
-                    w[winnerIndex + 1][i] = w[winnerIndex + 1][i] +
-                        (alpha * (training_pattern[vectorSelector][i] - w[winnerIndex + 1][i]));
-                } else { //Neighbor is on RIGHT EDGE
-                    //Update neighbor to the left.
+        switch(UPDATETYPE){
+            case 0:
+                //LINEAR TOPOLOGY
+                if((winnerIndex > 0) && (winnerIndex < (maxClusters - 1))){ //NEIGHBOR IN RANGE
+                    //Update neighbor to the left...
                     w[winnerIndex - 1][i] = w[winnerIndex - 1][i] +
                         (alpha * (training_pattern[vectorSelector][i] - w[winnerIndex - 1][i]));
+                    //and update neighbor to the right.
+                    w[winnerIndex + 1][i] = w[winnerIndex + 1][i] +
+                        (alpha * (training_pattern[vectorSelector][i] - w[winnerIndex + 1][i]));
+                } else {
+                    if(winnerIndex == 0){ //Neighbor is on LEFT EDGE
+                        //Update neighbor to the right.
+                        w[winnerIndex + 1][i] = w[winnerIndex + 1][i] +
+                            (alpha * (training_pattern[vectorSelector][i] - w[winnerIndex + 1][i]));
+                    } else { //Neighbor is on RIGHT EDGE
+                        //Update neighbor to the left.
+                        w[winnerIndex - 1][i] = w[winnerIndex - 1][i] +
+                            (alpha * (training_pattern[vectorSelector][i] - w[winnerIndex - 1][i]));
+                    }
                 }
-            }
+            break;
+            case 1: // RECTANGULAR
+                if((winnerIndex > 0) && (winnerIndex < (maxClusters - 1))){
+
+
+                }
+
+        }
         }
     }
 }
