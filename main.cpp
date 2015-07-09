@@ -6,7 +6,7 @@ using namespace std;
 //Parameters
 const int maxClusters = 4;
 const int vectorLength = 4;
-const double decayRate = 0.95;//0.96;              //About 100 iterations.
+const double decayRate = 0.96;//0.96;              //About 100 iterations.
 const double minAlpha = 0.01;
 const int UPDATETYPE = 0;
 //Neighbor Updating Parameter
@@ -26,33 +26,33 @@ int debug =0 ;
 //                                 {0.2, 0.8, 0.8, 0.6},
 //                                 {0.1, 0.4, 0.7, 0.3},
 //                                 {0.4, 0.5, 0.1, 0.7}};
-double w[maxClusters][vectorLength] = {{0.1, 0.1, 0.1, 0.1},
-                                 {0.1, 0.1, 0.1, 0.1},
-                                 {0.1, 0.1, 0.1, 0.1},
-                                 {0.1, 0.1, 0.1, 0.1}};
+double w[maxClusters][vectorLength] = {{0.2, 0.2, 0.2, 0.2},
+                                 {0.2, 0.2, 0.2, 0.2},
+                                 {0.2, 0.2, 0.2, 0.2},
+                                 {0.2, 0.2, 0.2, 0.2}};
 
 //Training patterns.
-const int NUM_TRAINING_PATTERN = 12;
-//int training_pattern[NUM_TRAINING_PATTERN][vectorLength] = {
-//                                                          {0, 0, 0, 1},
-//                                                          {0, 0, 1, 0},
-//                                                          {0, 1, 0, 0},
-//                                                          {1, 0, 0, 0}
-//                                                          };
+const int NUM_TRAINING_PATTERN = 4;
 int training_pattern[NUM_TRAINING_PATTERN][vectorLength] = {
-                                                          {0, 0, 0, 1},
-                                                          {0, 0, 1, 0},
-                                                          {0, 1, 0, 0},
-                                                          {1, 0, 0, 0},
-                                                          {0, 0, 0, 1},
-                                                          {0, 0, 1, 0},
-                                                          {0, 1, 0, 0},
-                                                          {1, 0, 0, 0},
                                                           {0, 0, 0, 1},
                                                           {0, 0, 1, 0},
                                                           {0, 1, 0, 0},
                                                           {1, 0, 0, 0}
                                                           };
+//int training_pattern[NUM_TRAINING_PATTERN][vectorLength] = {
+//                                                          {0, 0, 0, 1},
+//                                                          {0, 0, 1, 0},
+//                                                          {0, 1, 0, 0},
+//                                                          {1, 0, 0, 0},
+//                                                          {0, 0, 0, 1},
+//                                                          {0, 0, 1, 0},
+//                                                          {0, 1, 0, 0},
+//                                                          {1, 0, 0, 0},
+//                                                          {0, 0, 0, 1},
+//                                                          {0, 0, 1, 0},
+//                                                          {0, 1, 0, 0},
+//                                                          {1, 0, 0, 0}
+//                                                          };
 
 //Testing patterns to try after training is complete.
 const int inputTests = 4;
