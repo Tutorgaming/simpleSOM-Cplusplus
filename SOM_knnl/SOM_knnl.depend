@@ -4261,3 +4261,18 @@
 	<string>
 	<vector>
 
+1436531078 source:c:\users\ce-user\documents\simplesom-cplusplus\som_knnl\main.cpp
+	<iostream>
+	<fstream>
+	<iomanip>
+	<vector>
+	<iterator>
+	<string>
+	<array>
+	<neural_net_headers.hpp>
+	<print_network.hpp>
+	<map>
+	<set>
+	<SFML/System.hpp>
+	<SFML/Graphics.hpp>
+
