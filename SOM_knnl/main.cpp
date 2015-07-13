@@ -26,21 +26,21 @@ typedef std::vector <vector_data> vector_container;
 
 //CREATE DATASET
     vector<vector<double> > data;
-
+    vector<vector<double> > real_data;
 //Activation Function
-typedef neural_net::Cauchy_function < vector_data::value_type, vector_data::value_type, int > C_function_type;
-C_function_type cauchy_function(2.0,1);
+    typedef neural_net::Cauchy_function < vector_data::value_type, vector_data::value_type, int > C_function_type;
+    C_function_type cauchy_function(1.0,1);
 
 //Distance Unit
-typedef distance::Euclidean_distance_function<vector_data> Euclid_distance_type;
-Euclid_distance_type euclid_distance;
+    typedef distance::Euclidean_distance_function<vector_data> Euclid_distance_type;
+    Euclid_distance_type euclid_distance;
 
 //Newron Typedef
-typedef neural_net::Basic_neuron <C_function_type,Euclid_distance_type> Kohonen_neuron_type;
+    typedef neural_net::Basic_neuron <C_function_type,Euclid_distance_type> Kohonen_neuron_type;
 
 //Network Build Rectangular Topology
-typedef neural_net::Rectangular_container < Kohonen_neuron_type > Kohonen_network;
-Kohonen_network kohonen_network;
+    typedef neural_net::Rectangular_container < Kohonen_neuron_type > Kohonen_network;
+    Kohonen_network kohonen_network;
 
 template<typename T, size_t N>
 vector<T> convert_array_to_vector(const T (&source_array)[N]) {
@@ -86,13 +86,13 @@ void readfile_ucl(){
             }
             //DROP TAG
             getline ( inputfile, value , '\n');
-
 //            cout << "VECTOR CONTENT = <" ;
 //            for ( vector<double>::iterator i = one_input.begin() ; i < one_input.end() ; i ++){
 //                cout << *i << ((i==one_input.end()-1)? "":",");
 //            }
 //            cout << ">" <<endl;
             data.push_back(one_input);
+            real_data.push_back(one_input);
         }
     inputfile.close();
     }
@@ -123,6 +123,7 @@ void normalization(){
     for(int attribute = 0 ; attribute < element_count ; attribute++){
         for(int index =0 ; index < line_count-1 ; index++){
             data[index][attribute] = (data[index][attribute] - data_min[attribute]) / (data_max[attribute] - data_min[attribute]);
+            real_data[index][attribute] = data[index][attribute];
         }
     }
 }
@@ -176,17 +177,12 @@ int main(){
     normalization();
     cout << "Data is normalized successfully" <<endl;
 
-//    vector_container data =   {{1,0,0,0},
-//                                {0,1,0,0},
-//                                {0,0,1,0},
-//                                {0,0,0,1}};
-
     neural_net::External_randomize ER;
     neural_net::generate_kohonen_network ( ROW, COL, cauchy_function, euclid_distance, data, kohonen_network, ER );
 
 //    //Implementation Of Winner takes All Algorithm
 //    typedef neural_net::Wta_proportional_training_functional < vector_data, double, int > Wta_train_func;
-//    Wta_train_func wta_train_func ( 0.1, 0 );
+//    Wta_train_func wta_train_func ( 0.2, 0 );
 //    //
 //    typedef neural_net::Wta_training_algorithm< Kohonen_network,vector_data,
 //                                                vector_container::iterator,Wta_train_func> Learning_algorithm;
@@ -194,19 +190,17 @@ int main(){
 //    Learning_algorithm training_alg ( wta_train_func );
 
     //Implementation Of Winner takes Most Algorithm
-//    typedef neural_net::City_topology < size_t > Max_top;
-//    Max_top max_top;
-    typedef neural_net::Hexagonal_topology < size_t > Max_top;
-    Max_top max_top ( kohonen_network.get_no_rows() );
+    typedef neural_net::Hexagonal_topology < size_t > Hex_top;
+    Hex_top hex_top ( kohonen_network.get_no_rows() );
 
     typedef neural_net::Gauss_function < vector_data::value_type, vector_data::value_type, int > Gauss_function_space;
-    Gauss_function_space gauss_function_space ( 100, 1 );
+    Gauss_function_space gauss_function_space (100, 1 );
 
     typedef neural_net::Gauss_function < size_t, vector_data::value_type, int > Gauss_function_net;
     Gauss_function_net gauss_function_net ( 10, 1 );
 
-    typedef neural_net::Classic_training_weight<std::vector<double>, int ,Gauss_function_net, Gauss_function_space,Max_top,Euclid_distance_type,size_t >Classic_weight;
-    Classic_weight classic_weight(gauss_function_net,gauss_function_space,max_top,euclid_distance);
+    typedef neural_net::Classic_training_weight<std::vector<double>, int ,Gauss_function_net, Gauss_function_space,Hex_top,Euclid_distance_type,size_t >Classic_weight;
+    Classic_weight classic_weight(gauss_function_net,gauss_function_space,hex_top,euclid_distance);
 
     typedef neural_net::Wtm_classical_training_functional
     <
@@ -233,19 +227,7 @@ int main(){
 
     //Learning Iteration
     cout << "Learning" <<endl;
-////    for ( int i = 0; i < 250; ++i )
-////    {
-////    training_alg ( data.begin(), data.end(), &kohonen_network );
-////
-////   //decrease sigma parameter in network
-////   //will make training process more sharpen with each epoch,
-////   //but it have to be done slowly :-)
-////    training_alg.training_functional.generalized_training_weight.network_function.sigma
-////      *= 2.0/3.0;
-////
-////   //shuffle data
-////    std::random_shuffle ( data.begin(), data.end() );
-////    }
+
     int sizeMonitor = 400;
     sf::RenderWindow window(sf::VideoMode(sizeMonitor, sizeMonitor), "PLOTTER");
     int margin = sizeMonitor/ROW;
@@ -259,12 +241,14 @@ int main(){
         }
 
         //window.clear();
+        unsigned int round  = 50;
+        unsigned int X =0;
+        if(it < round){
 
-        if(it < 20){
-          training_alg ( data.begin(), data.end(), &kohonen_network );
-          std::random_shuffle ( data.begin(), data.end() );
-          if(it%10 == 0)cout << "training round = " << it <<endl;
-
+            X = it/(round*0.1);
+            std::cout << "\r" << X*10 << "% completed: ";
+            std::cout << std::string(X, '|');
+            std::cout.flush();
             for(unsigned int i = 0 ; i < ROW ; i++){
                 for(unsigned int j = 0 ;j < COL ; j++){
                     sf::RectangleShape temp(sf::Vector2f(margin, margin));
@@ -279,84 +263,55 @@ int main(){
                 }
             }
             it++;
+            training_alg ( data.begin(), data.end(), &kohonen_network );
+            std::random_shuffle ( data.begin(), data.end() );
             training_alg.training_functional.generalized_training_weight.network_function.sigma
             *= 2.0/3.0;
-
         }else{
-
-//        sf::RectangleShape tutor(sf::Vector2f(100,100));
-//        tutor.setPosition(200,200);
-//        sf::Color c(200,200,200);
-//        tutor.setFillColor(c);
-//        window.draw(tutor);
-//        window.display();
-        break;
-
+            break;
         }
         window.display();
-
-
-
-
-
-
     }
 
     cout <<endl << "Learning Phrase Completed ! " <<endl;
     cout << "===============================" <<endl;
-//
-//sf::RenderWindow window(sf::VideoMode(400, 400), "PLOTTER");
-//    int margin = 20;
-//    int it = 0;
-//    int test;
-//      while (window.isOpen()){
-//        sf::Event event;
-//        while (window.pollEvent(event))
-//        {
-//            if (event.type == sf::Event::Closed)
-//                window.close();
-//        }
-//
-//        window.clear();
-//
-//        for(int i = 0 ; i < ROW ; i++){
-//                for(int j = 0 ;j < COL ; j++){
-//                    sf::RectangleShape temp(sf::Vector2f(20, 20));
-//                    temp.setPosition(i*margin , j * margin);
-//                    int r = 255*kohonen_network.objects[i][j].weights[0];
-//                    int g = 255*kohonen_network.objects[i][j].weights[1];
-//                    int b = 255*kohonen_network.objects[i][j].weights[2];
-//                    int a = 255*kohonen_network.objects[i][j].weights[3];
-//                    sf::Color attribute_color(r,g,b,a);
-//                    temp.setFillColor(attribute_color);
-//                    window.draw(temp);
-//                }
-//        }
-//
-//        window.display();
-//      }
+
+
         cout << setprecision(9);
         cout << fixed;
-        //neural_net::print_network(cout,kohonen_network,test_vector);
         cout << endl << endl;
 
-        int min_x=0;
+        //neural_net::print_network_weights(cout,kohonen_network);
+
+
+
+    sf::RenderWindow windowsa(sf::VideoMode(sizeMonitor, sizeMonitor), "Classy");
+    //int margin = sizeMonitor/ROW;
+    //int it = 0;
+      while (windowsa.isOpen()){
+        sf::Event event;
+        while (windowsa.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+                windowsa.close();
+        }
+
+        windowsa.clear();
+
+         int min_x=0;
         int min_y=0;
-        double min_d = 65536;
+        double min_d = -65536;
 
         map<pair<int,int> , int > myMap;
         set<pair<int,int> > differ;
         for(int it = 0 ; it < 150 ; it++){
             for(int i = 0 ; i < ROW ; i++ ){
                 for(int j = 0 ; j < COL ; j++){
-                    double temp = kohonen_network(i,j)(data[it]);
-                    if(temp < min_d){
-                        min_x = i;
-                        min_y = j;
-                        min_d = temp;
-                    }
+                    double temp = kohonen_network(i,j)(real_data[0]);
+                    cout << temp <<endl;
                 }
             }
+            cin.ignore();
             cout << " MIN (X,Y) = (" << min_x << "," << min_y << ")" <<endl;
             cout << " WITH DISTANCE = " << min_d <<endl;
             differ.insert(make_pair(min_x,min_y));
@@ -366,14 +321,18 @@ int main(){
             tempa.setPosition( min_x * margin , min_y * margin);
             sf::Color attribute_color(255,255,255);
             tempa.setFillColor(attribute_color);
-            window.draw(tempa);
-            window.display();
-
+            windowsa.draw(tempa);
+            windowsa.display();
 
             min_x = 0;
             min_y = 0;
             min_d = 65536;
         }
+
+        window.display();
+    }
+
+
 //        cout << "found" << endl;
 //        for(set<pair<int,int>,int>::iterator it = differ.begin() ; it != differ.end() ; it++ ){
 //            cout << it->first << "," << it->second << " = " << myMap[make_pair(it->first,it->second)] <<endl;
@@ -384,6 +343,7 @@ int main(){
     cout << "END OF PLOTTING PROCESS" << endl;
 
     cin.ignore();
+    while(1);
 
 
     return 0;
